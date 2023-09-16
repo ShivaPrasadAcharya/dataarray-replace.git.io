@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Name Generator</title>
+    <style>
+        /* Add your CSS styles here */
+    </style>
+</head>
+<body>
+    <h1>Name Generator</h1>
+    <textarea id="names" placeholder="Enter names, one per line"></textarea>
+    <label for="outputCount">Number of Output Terms:</label>
+    <input type="number" id="outputCount" min="1" value="1">
+    <label for="startPosition">Input Start Position:</label>
+    <input type="number" id="startPosition" min="1" value="1">
+    <label for="outputStartPosition">Output Start Position:</label>
+    <input type="number" id="outputStartPosition" min="1" value="1">
+    <label for="replacePosition">Replace Position:</label>
+    <input type="text" id="replacePosition" placeholder="Enter positions (e.g., 7-9)">
+    <label for="replaceText">Replace Text:</label>
+    <textarea id="replaceText" placeholder="Enter text to insert"></textarea>
+    <button type="button" id="replaceButton">Replace</button>
+    <button type="button" id="setStartPositionButton">Set Start Positions</button>
+    <button type="button" id="generateButton">Generate</button>
+    <div id="output"></div>
+
+    <script>
+        // JavaScript code to generate the desired output
+        var generateButton = document.getElementById("generateButton");
+        var setStartPositionButton = document.getElementById("setStartPositionButton");
+        var replaceButton = document.getElementById("replaceButton");
+        var namesInput = document.getElementById("names");
+        var outputCountInput = document.getElementById("outputCount");
+        var startPositionInput = document.getElementById("startPosition");
+        var outputStartPositionInput = document.getElementById("outputStartPosition");
+        var replacePositionInput = document.getElementById("replacePosition");
+        var replaceTextInput = document.getElementById("replaceText");
+        var outputDiv = document.getElementById("output");
+
+        var inputStartPosition = 1;
+        var outputStartPosition = 1;
+        var output = {};
+
+        setStartPositionButton.addEventListener("click", function() {
+            inputStartPosition = parseInt(startPositionInput.value, 10);
+            outputStartPosition = parseInt(outputStartPositionInput.value, 10);
+        });
+
+        generateButton.addEventListener("click", function() {
+            var inputNames = namesInput.value.split('\n').map(function(name) { return name.trim(); });
+            var outputCount = parseInt(outputCountInput.value, 10);
+
+            output = {};
+
+            for (var i = 0; i < outputStartPosition - 1; i++) {
+                output["input" + (i + 1)] = " ";
+            }
+
+            for (var i = 0; i < outputCount; i++) {
+                var inputIndex = inputStartPosition - 1 + i;
+                var outputIndex = outputStartPosition - 1 + i;
+
+                if (inputIndex >= 0 && inputIndex < inputNames.length) {
+                    output["input" + (outputIndex + 1)] = inputNames[inputIndex];
+                } else {
+                    output["input" + (outputIndex + 1)] = " ";
+                }
+            }
+
+            displayOutput(output);
+        });
+
+        replaceButton.addEventListener("click", function() {
+            var replacementText = replaceTextInput.value;
+            var replacePositions = replacePositionInput.value.split(',').map(function(pos) { return pos.trim(); });
+
+            for (var j = 0; j < replacePositions.length; j++) {
+                var range = replacePositions[j].split('-');
+                if (range.length === 1) {
+                    // Single position
+                    var replacePosition = parseInt(range[0], 10);
+                    var outputIndex = outputStartPosition + replacePosition - 2;
+                    if (outputIndex >= 0) {
+                        // Insert text in the specified position
+                        output["input" + (outputIndex + 1)] = replacementText;
+                    }
+                } else if (range.length === 2) {
+                    // Range of positions
+                    var start = parseInt(range[0], 10);
+                    var end = parseInt(range[1], 10);
+
+                    // Split replacementText into lines
+                    var lines = replacementText.split('\n');
+
+                    // Insert lines of text in the range
+                    for (var i = start; i <= end && i - start < lines.length; i++) {
+                        output["input" + (outputStartPosition + i - 1)] = lines[i - start];
+                    }
+                }
+            }
+
+            displayOutput(output);
+        });
+
+        function displayOutput(output) {
+            var outputString = "{ ";
+            var keys = Object.keys(output);
+            for (var i = 0; i < keys.length; i++) {
+                outputString += keys[i] + ": " + JSON.stringify(output[keys[i]]) + ", ";
+            }
+            outputString = outputString.slice(0, -2); // Remove the trailing comma and space
+            outputString += " }";
+
+            outputDiv.textContent = outputString;
+        }
+    </script>
+</body>
+</html>
